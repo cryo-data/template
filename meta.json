@@ -1,0 +1,10 @@
+{
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Template data",
+    "science reference": "Paper citation",
+    "science DOI": "doi:",
+    "data DOI": "doi:",
+    "data URL": "https://",
+    "keywords": "foo, bar"
+}

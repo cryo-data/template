@@ -1,0 +1,112 @@
+* Template Name
+
+Optional text description
+
+** Metadata
+
+#+NAME: datalad-meta
+#+BEGIN_SRC python :results output verbatim drawer :exports results
+import json
+
+with open("meta.json") as file:
+    data = json.load(file)
+
+for item in data:
+    if item[0] == '@': continue
+    print('|', item, '|', data[item], '|')
+#+END_SRC
+
+#+RESULTS: datalad-meta
+:results:
+| name              | Template data  |
+| science reference | Paper citation |
+| science DOI       | doi:           |
+| data DOI          | doi:           |
+| data URL          | https://       |
+| keywords          | foo, bar       |
+:end:
+
+
+** Create dataset
+:PROPERTIES:
+:CUSTOM_ID: ceate-data
+:END:
+
++ Remove the following text, or replace with explanation of how datalad dataset is created
++ Replace the =bash= block with =python= or other preferred language
++ Keep the =#+NAME: datalad-create= name so that these blocks can be called via script
+
+#+NAME: datalad-create
+#+BEGIN_SRC bash
+# datalad create -f -d . -c text2git -D "Template"
+datalad create -f -d . -D "Cryo data template"
+
+git remote add origin git@github.com:cryo-data/template.git
+
+git add meta.json README.org
+git commit -m "README & metadata"
+git branch -M main
+git push -u origin main
+#+END_SRC
+
+** How to use this template
+:PROPERTIES:
+:CUSTOM_ID: how-to-use-this-template
+:END:
+
++ Pick a name for the new dataset
+  + Folder name should be "Author_YYYY" if possible, or some other common name for the dataset (e.g. =ArcticDEM= or =MEaSUREs.0471=)
+  + In this example, we'll use =Mankoff_2020=, and convert https://dataverse01.geus.dk/dataset.xhtml?persistentId=doi:10.22008/promice/data/ice_discharge/d/v02 to a datalad dataset.
+
++ Copy template to clean directory using the new dataset name
+
+#+BEGIN_SRC bash
+dest="Mankoff_2020"
+git clone https://github.com/cryo-data/template.git ${dest}
+cd ${dest}
+#+END_SRC
+
++ Set up a new repository, ideally under the [[https://github.com/cryo-data][cryo-data portal on GitHub]], but can be hosted anywhere.
+  + Set up by visiting https://github.com/organizations/cryo-data/repositories/new and do **not** initialize with any files, then:
+
+#+BEGIN_SRC bash
+git remote rm origin
+git remote add origin git@github.com:cryo-data/${dest}.git
+git branch -M main
+git push -u origin main
+#+END_SRC
+
++ If the dataset already contains its own =README.org=, then keep that and rename this one to =datalad.org=
+
+#+BEGIN_SRC bash
+git mv README.org datalad.org
+git commit datalad.org -m 'Rename README.org to datalad.org because dataset has README.org'
+#+END_SRC
+
++ Populate the datalad dataset 
+  + NOTE :: The code below should go into the [[#create-data][create data]] section above.
+
+The code below downloads each file using ~datalad download-url~. This is one of many ways to populate a dalatad dataset.
+
++ TODO: Show examples for adding data that is accessible via an archive (Zenodo?) or data already in git.
++ TODO: Provide small shell or Python script in template folder for traversing and downloading remote directory structure (e.g. =wget -r ...=).
+
+#+BEGIN_SRC bash
+export SERVER=https://dataverse01.geus.dk
+export DOI=10.22008/promice/data/ice_discharge/d/v02
+
+curl ${SERVER}/api/datasets/:persistentId?persistentId=doi:${DOI} > dv.json
+cat dv.json | tr ',' '\n' | grep -E '"persistentId"' | cut -d'"' -f4 > urls.txt
+while read -r PID; do
+  datalad download-url $SERVER/api/access/datafile/:persistentId?persistentId=${PID}
+done < urls.txt
+rm dv.json urls.txt # cleanup
+#+END_SRC
+
++ Push changes
+
+#+BEGIN_SRC bash
+git push
+#+END_SRC
+
++ Remove [[#how-to-use-this-template][this section]] from the [[./README.org]] file.
